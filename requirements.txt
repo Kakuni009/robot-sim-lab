@@ -1,0 +1,2 @@
+# Install CUDA PyTorch first; see setup.ps1.
+isaacsim[all,extscache]==6.1.0.0
