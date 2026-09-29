@@ -72,6 +72,23 @@ Pythonのprefixに拡張パス表記を付ける方法も、相対パス `../../
 起動ログにはIntel内蔵GPUをスキップする警告とUSD関連の警告があるが、
 RTX 5070 Tiで初期化とアプリ更新は成功した。アセット変換の互換性は今後の実装で検証する。
 
+## 起動時の問題: スマート アプリ コントロール（2026-09-30）
+
+以前は起動できていた `launch.ps1` が、`uv trampoline failed to spawn Python child process`
+（`os error 4551`）で失敗した。`.venv\Scripts\python.exe` 単体でも
+「アプリケーション制御ポリシーによってこのファイルがブロックされました」となった。
+
+- `Get-MpComputerStatus` の `SmartAppControlState` は `On`。
+- `Microsoft-Windows-CodeIntegrity/Operational` に3033/3077/3118を記録。対象は `.venv\Scripts\python.exe`。
+- uv取得のPython本体と仮想環境の `python.exe` は `NotSigned`。
+- `.venv` 内の exe/dll/pyd は Valid 2752件、NotSigned 392件。署名なしは torch/lib、scipy、numpy、
+  PyOpenGL、mujoco などPyPIの一般的なライブラリに集中していた。
+
+署名付きPythonへの置き換えではライブラリ側が残るため、ユーザー判断でスマート アプリ コントロールをオフにした。
+その後、GUI起動と `workcell-v02-camera.usd` の表示を確認した。`-Mode smoke` の再実行は未記録。
+評価モードからオンに切り替わった時期は未確認。経緯は
+[Zenn下書き](smart-app-control-zenn-draft.md) にまとめた。
+
 匿名テレメトリの2設定は、起動スクリプトと簡易テストで無効にしている。
 
 ## 参照
