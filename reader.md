@@ -209,6 +209,57 @@ SupplyMarkerの作成直後の画像ではPrim Pathは `/SupplyMarker`（World�
 次の作業は仮想カメラの追加と部品の撮影。本人が操作・実装し、Codexは手順と仕組みを説明する。
 動作動画、繰り返し試験、着地後の配置精度の測定は残課題。
 
+## 進捗記録（2026-09-23）
+
+- `workcell-v01.usd` を再度開き、ロボット、青い部品、2つの目印が復元されることを確認した。
+- 現在のViewport構図から `/WorkcellCamera` を作成した。
+- カメラ付きシーンを `workcell-v02-camera.usd` として保存した。
+- `scripts/capture_workcell.py` をScript Editorから実行し、
+  `outputs/workcell-camera-001.png` の生成に成功した。
+- 初回画像にはロボット部品の選択を示すオレンジ色の輪郭が写った。
+- スクリプトは既存画像を上書きせず、連番の空きファイル名を選ぶよう変更した。
+- 選択解除後のクリーンな `workcell-camera-002.png` を生成し、自動採番も確認した。
+- `/World/PartCube` のXだけを0.5、0.6、0.7へ変更し、同一カメラ・照明条件で
+  `workcell-camera-002.png` から `004.png` を生成した。3枚の位置変化を目視確認した。
+- `outputs/labels.csv` に画像名と世界座標 `(x, y, z)` の対応を保存し、内容を確認した。
+- Script Editorで `list`、`for`、`enumerate` を使うループを本人が入力・実行した。
+- `omni.usd` からStageと `/World/PartCube` を取得し、`IsValid()`、Prim Path、
+  `xformOp:translate` の読取りを本人が入力・実行した。
+- 元と同じUSD座標型、Y、Zを維持し、PythonからXだけを0.5から0.6へ変更できた。
+- Script Editorでは日本語IMEが動作しなかったため、コードと出力は英語に統一する。
+- `Path.write_text` の `encoding` 引数でエラーを経験したが、引数を外してCSV生成に成功した。
+  CSVは内容とUTF-8 BOMなしを確認済み。
+- 最後のLive StageはコードでX=0.6へ変更された。保存済みUSDの更新時刻はその実行より前なので、
+  最後の変更はディスクへ保存されていない。
+
+詳しい手順とコードは [位置変更データを手作業で作る](docs/05-manual-position-dataset.md) を参照。
+
+### 次回の開始点
+
+`workcell-v02-camera.usd` を開き直し、`/World/PartCube` のXが0.5であることを確認する。
+本人が入力したループとUSD座標変更を基に、フレーム待ち・撮影・ラベル追記を段階的に加える。
+最初から完成コードを渡さず、一段ごとに本人が入力して結果を確認する。
+
+## 進捗記録（2026-09-24）
+
+- `workcell-v02-camera.usd` を開き、保存済みの `/World/PartCube` のXが0.5であることを本人が確認した。
+- Script Editorで `xformOp:translate` のXだけを0.6へ変更した。画面の出力で
+  `Before: (0.5, 0, 0.025800000876188278)` と
+  `After: (0.6, 0, 0.025800000876188278)` を確認した。
+- `next_viewport_frame_async` を実行し、`One viewport frame completed` の出力を確認した。
+- フレーム待ちのコードを `scripts/generate_position_dataset.py` に保存した。現時点の内容は
+  フレーム待ちのみで、位置変更・撮影・CSV記録をまとめたループは未実装。
+- 既存の `scripts/capture_workcell.py` をScript Editorから実行し、
+  `outputs/workcell-camera-005.png` の生成と `Capture complete` の出力を確認した。
+- この撮影について画像と座標の対応はCSVへ追記していない。撮影後のUSD保存も未確認。
+- 2地点の位置変更・フレーム待ちを試すコードは提示したが、本人は実行せず⑤で終了した。
+
+### 次回の開始点
+
+まずLive Stageの `/World/PartCube` の現在Xを読み、必要なら0.5へ戻す。
+`scripts/generate_position_dataset.py` に、位置変更とフレーム待ちを2地点で繰り返す処理を
+本人が段階的に追加・実行する。その後に撮影とCSV記録をつなげる。
+
 ## 公式資料
 
 - [Isaac Sim概要](https://developer.nvidia.com/isaac/sim/)
