@@ -14,8 +14,8 @@ Physical AI・製造AIのポートフォリオへ育てる。
 - 起動・再構築の手順と制限は [environment.md](environment.md) を参照。
 - ユーザー操作でGUI起動とFranka Pick Placeの把持・運搬を確認済み。Isaac Labは未導入。
 - 既存サンプルに供給・運搬先の目印を追加した最小作業セルを作成し、運搬を確認済み。
-- 作業セルに仮想カメラ `WorkcellCamera` を追加（2026-09-30）。画像保存は未実装。
-- 独自の制御・学習コード、カメラ、データ生成処理は未実装。
+- 作業セルに仮想カメラ `WorkcellCamera` を追加し、Viewport画像をPNGで保存できる（2026-09-23）。位置変更・撮影・ラベル記録をまとめた生成処理は未実装。
+- 独自の制御・学習コードは未実装。
 - 定期実行は未設定。まずは手動で起動する実験から始める。
 
 ## 開発者の経験とPC
@@ -202,43 +202,88 @@ SupplyMarkerの作成直後の画像ではPrim Pathは `/SupplyMarker`（World�
 - USDはシーンの保存であり、実行中のPython制御やサンプルUIをそのまま復元するものではない。
 - 本日はここで終了。カメラ追加・撮影は未着手。
 
+## 進捗記録（2026-09-23）
+
+- `workcell-v01.usd` を再度開き、ロボット、青い部品、2つの目印が復元されることを確認した。
+- 現在のViewport構図から `/WorkcellCamera` を作成した。
+- カメラ付きシーンを `workcell-v02-camera.usd` として保存した。
+- `scripts/capture_workcell.py` をScript Editorから実行し、
+  `outputs/workcell-camera-001.png` の生成に成功した。
+- 初回画像にはロボット部品の選択を示すオレンジ色の輪郭が写った。
+- スクリプトは既存画像を上書きせず、連番の空きファイル名を選ぶよう変更した。
+- 選択解除後のクリーンな `workcell-camera-002.png` を生成し、自動採番も確認した。
+- `/World/PartCube` のXだけを0.5、0.6、0.7へ変更し、同一カメラ・照明条件で
+  `workcell-camera-002.png` から `004.png` を生成した。3枚の位置変化を目視確認した。
+- `outputs/labels.csv` に画像名と世界座標 `(x, y, z)` の対応を保存し、内容を確認した。
+- Script Editorで `list`、`for`、`enumerate` を使うループを本人が入力・実行した。
+- `omni.usd` からStageと `/World/PartCube` を取得し、`IsValid()`、Prim Path、
+  `xformOp:translate` の読取りを本人が入力・実行した。
+- 元と同じUSD座標型、Y、Zを維持し、PythonからXだけを0.5から0.6へ変更できた。
+- Script Editorでは日本語IMEが動作しなかったため、コードと出力は英語に統一する。
+- `Path.write_text` の `encoding` 引数でエラーを経験したが、引数を外してCSV生成に成功した。
+  CSVは内容とUTF-8 BOMなしを確認済み。
+- 最後のLive StageはコードでX=0.6へ変更された。保存済みUSDの更新時刻はその実行より前なので、
+  最後の変更はディスクへ保存されていない。
+
+詳しい手順とコードは [位置変更データを手作業で作る](docs/05-manual-position-dataset.md) を参照。
+
+### 次回の開始点
+
+`workcell-v02-camera.usd` を開き直し、`/World/PartCube` のXが0.5であることを確認する。
+本人が入力したループとUSD座標変更を基に、フレーム待ち・撮影・ラベル追記を段階的に加える。
+最初から完成コードを渡さず、一段ごとに本人が入力して結果を確認する。
+
+## 進捗記録（2026-09-24）
+
+- `workcell-v02-camera.usd` を開き、保存済みの `/World/PartCube` のXが0.5であることを本人が確認した。
+- Script Editorで `xformOp:translate` のXだけを0.6へ変更した。画面の出力で
+  `Before: (0.5, 0, 0.025800000876188278)` と
+  `After: (0.6, 0, 0.025800000876188278)` を確認した。
+- `next_viewport_frame_async` を実行し、`One viewport frame completed` の出力を確認した。
+- フレーム待ちのコードを `scripts/generate_position_dataset.py` に保存した。現時点の内容は
+  フレーム待ちのみで、位置変更・撮影・CSV記録をまとめたループは未実装。
+- 既存の `scripts/capture_workcell.py` をScript Editorから実行し、
+  `outputs/workcell-camera-005.png` の生成と `Capture complete` の出力を確認した。
+- この撮影について画像と座標の対応はCSVへ追記していない。撮影後のUSD保存も未確認。
+- 2地点の位置変更・フレーム待ちを試すコードは提示したが、本人は実行せず⑤で終了した。
+
+### 次回の開始点
+
+まずLive Stageの `/World/PartCube` の現在Xを読み、必要なら0.5へ戻す。
+`scripts/generate_position_dataset.py` に、位置変更とフレーム待ちを2地点で繰り返す処理を
+本人が段階的に追加・実行する。その後に撮影とCSV記録をつなげる。
+
 ## 進捗記録（2026-09-30）
 
 ### 起動できなくなった件
 
-`launch.ps1` がスマート アプリ コントロールにブロックされて起動しなかった。
+`launch.ps1` がスマート アプリ コントロールにブロックされ、Pythonが起動しなかった。
 原因の切り分けと対処は [environment.md](environment.md) の「起動時の問題」を参照。
 ユーザー判断でオフにした後、GUIの起動を確認した。
 
-### 作業セルとカメラ（ユーザー提供のスクリーンショットで確認）
+### カメラ位置の調整
 
-保存済みの `workcell-v01.usd` をUSDライブラリで読んだところ、運搬先の目印が `/Cube` のまま保存されていた。
-ユーザーはこの整理とカメラ追加を `workcell-v02-camera.usd` で進めていた（ファイルはローカルのみで、Git管理外）。
-
-| Prim | 状態 |
-|---|---|
-| `/World/PartCube` | 部品。`Cube` から名前を変更 |
-| `/SupplyMarker` | (0.5, 0, 0.001)。変更なし |
-| `/TargetMarker` | `/Cube` から名前を変更。(0, 0.5, 0.001)、Scale (0.15, 0.15, 0.002) |
-| `/WorkcellCamera` | 追加。最初はTranslate (0.83744, 0.15009, 2.53165)、Rotate XYZ (19.95352, -0.0, 89.0743) 度 |
-
-- ビューポートを `WorkcellCamera` に切り替え、1280×720で約108 FPS、VRAM使用量1.9 GBを表示していた。
-- スクリーンショット時点でタイトルに `*` があり、最後の変更が保存済みかは未確認。
-- 目印とカメラは `/World` の外にある。動作への影響はない。
-- `PartCube` への名前変更後に、Pick Placeサンプルの制御が動くかは未確認。サンプルが `/World/Cube` を前提にしているかをコードで確認する。
-
-最初の配置は高さ約2.5 mで、部品が画像内で小さく写った。Translateを (0.65, 0.26, 1.4) に変更し、
-回転はそのまま（Focal Length 18.14756、水平アパーチャ 20.955）で保存した。
+`workcell-v02-camera.usd` の `/WorkcellCamera` は、最初 Translate (0.83744, 0.15009, 2.53165)、
+Rotate XYZ (19.95352, -0.0, 89.0743) 度だった。高さ約2.5 mで部品が小さく写るため、
+回転はそのままでTranslateを (0.65, 0.26, 1.4) に変更して保存した（Focal Length 18.14756、水平アパーチャ 20.955）。
 画像の下が +X、右が +Y。部品・両方の目印・ロボット基部が画面に収まることをスクリーンショットで確認した。
-供給場所の目印が下端に近いため、配置を変えて撮影する前にXをわずかに上げる案がある（未実施）。
 
-撮影スクリプト [scripts/capture_one.py](scripts/capture_one.py) を作成した（未実行）。
-解説は [docs/04-capture-script.md](docs/04-capture-script.md)。
+保存済みUSDをUSDライブラリで読んで確認したこと:
+
+- `/World/PartCube` は (0.5, 0, 0.0258)、`/TargetMarker` は (0, 0.5, 0.001)。
+  `workcell-v01.usd` では運搬先の目印が `/Cube` のまま保存されていたが、v02では名前が変わっている。
+- `/SupplyMarker` のXが 0.50236 になっている（v01では0.5）。意図しないドラッグの可能性がある。未修正。
+- 目印とカメラは `/World` の外にある。動作への影響はない。
+- 名前変更後の `PartCube` で、Pick Placeサンプルの制御が動くかは未確認。
+
+供給場所の目印が画像の下端に近いため、配置を変えて撮影する前にカメラのXをわずかに上げる案がある（未実施）。
+`workcell-camera-001`〜`005.png` は変更前のカメラ位置で撮影した画像。新しい位置の画像と混ぜて比較しない。
 
 ## 次回の開始点
 
-`workcell-v02-camera.usd` を保存した状態から始める。
-`scripts/capture_one.py` をScript Editorで実行し、画像と `label.json` が保存されるかを確認する。
+`workcell-v02-camera.usd` を開き、`/World/PartCube` のXが0.5、`/SupplyMarker` のXが意図どおりかを確認する。
+2026-09-24の方針どおり、`scripts/generate_position_dataset.py` に位置変更とフレーム待ちを2地点で繰り返す処理を
+本人が段階的に追加・実行し、その後に撮影とCSV記録をつなげる。
 動作動画、繰り返し試験、着地後の配置精度の測定は残課題。
 
 ## 公式資料
