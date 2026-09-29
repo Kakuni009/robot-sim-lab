@@ -279,12 +279,36 @@ Rotate XYZ (19.95352, -0.0, 89.0743) 度だった。高さ約2.5 mで部品が�
 供給場所の目印が画像の下端に近いため、配置を変えて撮影する前にカメラのXをわずかに上げる案がある（未実施）。
 `workcell-camera-001`〜`005.png` は変更前のカメラ位置で撮影した画像。新しい位置の画像と混ぜて比較しない。
 
+### Script Editorでの状態確認（ステップ1）
+
+`for` でパスのリストを回し、2つのPrimの存在と `xformOp:translate` を本人が入力・実行した。
+
+```text
+/World/PartCube True (0.5, 0, 0.025800000876188278)
+/SupplyMarker True (0.5, 0, 0.001)
+```
+
+Live StageではSupplyMarkerのXは0.5だった。リポジトリにコミットされたv02のファイルでは0.50236だったため、
+ファイルとLive Stageが一致していない可能性がある。保存（Ctrl+S）してそろえるのは未実施。
+
+### 提示したが未実行（ステップ2）
+
+`generate_position_dataset.py` を、`PartCube` のXを0.55・0.65へ順に変え、各位置で
+`next_viewport_frame_async` を待ち、最後に元の位置へ戻すループに置き換える案を提示した。
+元の位置を `original` に保持して最後に戻すのは、9/23にX=0.6のまま未保存で終わった点への対策。
+値は既存画像（0.5〜0.7）と区別するため。本人は実行せず、本日はここで終了した。
+
 ## 次回の開始点
 
-`workcell-v02-camera.usd` を開き、`/World/PartCube` のXが0.5、`/SupplyMarker` のXが意図どおりかを確認する。
-2026-09-24の方針どおり、`scripts/generate_position_dataset.py` に位置変更とフレーム待ちを2地点で繰り返す処理を
-本人が段階的に追加・実行し、その後に撮影とCSV記録をつなげる。
+1. `workcell-v02-camera.usd` を開き、ステップ1のコードで `PartCube` のXが0.5、`SupplyMarker` のXが0.5かを確認する。
+   SupplyMarkerがずれていれば0.5へ戻して保存する。
+2. ステップ2のループを本人が `generate_position_dataset.py` に入力・実行し、
+   `Moved to` 2行と `Restored to` 1行が出るかを確認する。
+3. 次にループへ撮影（`capture_workcell.py` の処理）を、その次にCSV追記を一段ずつ加える。
+
 動作動画、繰り返し試験、着地後の配置精度の測定は残課題。
+Zenn下書き（`smart-app-control-zenn-draft.md`）は、`print('ok')` と `-Mode smoke` の結果、
+参考リンクの確認が済めば公開できる。
 
 ## 公式資料
 
