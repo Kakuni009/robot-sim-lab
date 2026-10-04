@@ -3,11 +3,11 @@ from pathlib import Path
 
 
 import omni.usd
-from omni.kit.viewport.utility import {
+from omni.kit.viewport.utility import (
     capture_viewport_to_file,
     get_active_viewport,
     next_viewport_frame_async,
-}
+)
 
 
 POSITIONS = [0.55,0.65]
@@ -46,5 +46,5 @@ async def move_part_loop():
         print(f"Restored to {translate.Get()}")
 
 
-asyncio.ensure_future(move_part_loop())D
+asyncio.ensure_future(move_part_loop())
 
