@@ -15,6 +15,8 @@
    — 仮想カメラの追加、Script Editorからの撮影、自動採番、初回画像の確認結果。
 5. [位置変更データを手作業で作る](05-manual-position-dataset.md)
    — X座標を変えた3枚の撮影、CSVラベル、Stageからの座標取得と変更。
+6. [位置変更・撮影・CSV追記を自動化する](06-position-dataset-script.md)
+   — `generate_position_dataset.py` の行ごとの解説、async/await、遭遇したエラーの読み方。
 
 今回Script Editorへ追加したのは、既存サンプルの状態を読む調査コード。
 ロボットの制御コードは変更していない。目印はPythonではなくGUIで追加した。
