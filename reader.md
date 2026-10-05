@@ -298,13 +298,49 @@ Live StageではSupplyMarkerのXは0.5だった。リポジトリにコミット
 元の位置を `original` に保持して最後に戻すのは、9/23にX=0.6のまま未保存で終わった点への対策。
 値は既存画像（0.5〜0.7）と区別するため。本人は実行せず、本日はここで終了した。
 
+## 進捗記録（2026-10-06）
+
+### 保存済みUSDの確認
+
+10/5にコミットされた `workcell-v02-camera.usd` をUSDライブラリで読んだ。
+`/World/PartCube` (0.5, 0, 0.0258)、`/SupplyMarker` (0.5, 0, 0.001)、`/TargetMarker` (0, 0.5, 0.001)。
+9/30に見つかったSupplyMarkerのずれ（0.50236）は解消している。
+`/WorkcellCamera` のTranslateは (0.72, 0.26, 1.4) で、9/30の (0.65, 0.26, 1.4) からXが上がっていた。
+
+### 位置変更・撮影・CSV追記を1本のスクリプトにまとめた
+
+`scripts/generate_position_dataset.py` を本人が入力し、Script Editorから実行した。
+処理の流れは次のとおり。PartCubeのXを `POSITIONS` の順に変更し、1フレーム待って撮影する。
+撮影に成功した後で、`translate.Get()` で読み直した座標を `outputs/v02/labels.csv` に追記する。
+最後に `finally` で元の位置へ戻す。
+
+1. 撮影までの段階（X=0.55, 0.65）では、まず `import {}`・`flie_path`・`completion_frame` の打ち間違いと、
+   末尾の余分な文字を直した。`capture()` の呼び出し漏れも直した。
+   その後の実行で `Captured` 2行と `Restored to (0.5, …)` 1行が出た。
+   画像では、Xを増やすと部品が画面の下へ動いた（下が +X、9/30の観察と一致）。
+   この2枚は、CSVで撮り直すために本人が削除した。
+2. CSV追記を加えた最初の実行は、`csv/writer(f)`（`.` ではなく `/`）が原因で `UnboundLocalError` になった。
+   関数内で `writer` に代入しているため、`/` の右辺の `writer` が未代入のローカル変数として扱われた。
+   失敗時には `pos-x0.45.png` と0バイトの `labels.csv` が残った。
+   ヘッダの要否をファイルの有無で判定しているため、空のCSVを残すとヘッダが書かれない。そこで2つとも削除して再実行した。
+3. 修正後（X=0.45, 0.60）は、`Captured` 2行と `Restored to (0.5, …)` が出た。
+
+`outputs/v02/labels.csv` の中身（CRLF改行、BOMなし。改行はcsvモジュールの既定）:
+
+```csv
+image,x,y,z
+pos-x0.45.png,0.45,0.0,0.025800000876188278
+pos-x0.60.png,0.6,0.0,0.025800000876188278
+```
+
+USDの保存（Ctrl+S）は行っていない。スクリプトは元の位置へ戻すため、Live Stageも0.5のまま。
+
 ## 次回の開始点
 
-1. `workcell-v02-camera.usd` を開き、ステップ1のコードで `PartCube` のXが0.5、`SupplyMarker` のXが0.5かを確認する。
-   SupplyMarkerがずれていれば0.5へ戻して保存する。
-2. ステップ2のループを本人が `generate_position_dataset.py` に入力・実行し、
-   `Moved to` 2行と `Restored to` 1行が出るかを確認する。
-3. 次にループへ撮影（`capture_workcell.py` の処理）を、その次にCSV追記を一段ずつ加える。
+1. 撮る位置を増やす。Yも変え、画像のファイル名にYも入れる（例: `pos-x0.45-y0.10.png`）。
+   部品が画面外へ出ない範囲を、まず数点で確かめる。0.65で供給目印の下端にかかり始める。
+2. 案: 空CSVへの対策として、ヘッダ判定を `not exists() or stat().st_size == 0` にする（未実施）。
+3. 候補: 世界座標と並べて、画像上のピクセル座標（2D位置やバウンディングボックス）もラベルに残すか判断する。
 
 動作動画、繰り返し試験、着地後の配置精度の測定は残課題。
 Zenn下書き（`smart-app-control-zenn-draft.md`）は、`print('ok')` と `-Mode smoke` の結果、

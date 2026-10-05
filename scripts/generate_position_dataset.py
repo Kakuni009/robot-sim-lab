@@ -1,4 +1,5 @@
 import asyncio
+import csv
 from pathlib import Path
 
 
@@ -10,12 +11,13 @@ from omni.kit.viewport.utility import (
 )
 
 
-POSITIONS = [0.55,0.65]
+POSITIONS = [0.45,0.60]
 OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs/v02")
+LABELS_PATH = OUTPUT_DIR / "labels.csv"
 
 async def capture(viewport, path):
-    result = capture_viewport_to_file(viewport, flie_path=str(path))
-    if not await result.wait_for_result(completion_frame=30):
+    result = capture_viewport_to_file(viewport, file_path=str(path))
+    if not await result.wait_for_result(completion_frames=30):
         raise RuntimeError(f"Capture failed: {path}")
 
 
@@ -39,12 +41,21 @@ async def move_part_loop():
                 raise RuntimeError(f"Already exists: {path}")
             translate.Set(type(original)(x,original[1],original[2]))
             await next_viewport_frame_async(viewport)
+            await capture(viewport,path)
+            append_label(path.name, translate.Get())
             print(f"Captured {path.name} at {translate.Get()}")
 
     finally:
         translate.Set(original)
         print(f"Restored to {translate.Get()}")
 
+def append_label(image_name, position):
+    is_new = not LABELS_PATH.exists()
+    with open(LABELS_PATH, "a", newline="") as f:
+        writer = csv.writer(f)
+        if is_new:
+            writer.writerow(["image", "x" ,"y" ,"z"])
+        writer.writerow([image_name, position[0],position[1],position[2]])
 
 asyncio.ensure_future(move_part_loop())
 
