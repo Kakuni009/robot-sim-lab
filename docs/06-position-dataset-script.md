@@ -138,7 +138,7 @@ for x in POSITIONS:
 | `f"pos-x{x:.2f}.png"` | f文字列の `:.2f` は「小数点以下2桁で表示」。`0.6` は `0.60` になる。ファイル名の長さを揃えるため |
 | `path.exists()` | 既存の画像を上書きしないための確認 |
 | `type(original)(x, ...)` | `original` と同じ型でベクトルを作る。属性の型は `double3` で、値は `Gf.Vec3d`。YとZは元の値を使い、Xだけを変える |
-| `await next_viewport_frame_async` | 座標を変えた直後の画面は、まだ古い位置の絵のまま。1フレーム描画させてから撮影する |
+| `await next_viewport_frame_async` | 座標を変えた直後の画面は、まだ古い位置の絵のまま。描画を進めてから撮影する。**10/7訂正: 1フレームでは不足。** 1回では1つ前の位置が写り、3回では前の位置の残像が残った。30回で解消（reader.mdの10/7記録を参照） |
 | `append_label(..., translate.Get())` | 設定したつもりの `x` ではなく、Stageから読み直した実際の値を記録する |
 
 #### `finally` で元の位置に戻す

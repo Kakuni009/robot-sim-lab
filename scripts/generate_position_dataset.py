@@ -11,9 +11,10 @@ from omni.kit.viewport.utility import (
 )
 
 
-POSITIONS = [0.45,0.60]
+POSITIONS = [(x,y) for x in [0.35,0.45,0.55] for y in [-0.2, 0.0,0.2]]
 OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs/v02")
 LABELS_PATH = OUTPUT_DIR / "labels.csv"
+HOME = (0.5,0.0,0.025800000876188278)
 
 async def capture(viewport, path):
     result = capture_viewport_to_file(viewport, file_path=str(path))
@@ -26,22 +27,30 @@ async def move_part_loop():
     cube = stage.GetPrimAtPath("/World/PartCube")
     translate = cube.GetAttribute("xformOp:translate")
     original = translate.Get()
+    print(f"Start (cube at{original})")
+    if any(abs(a-b) >1e-6 for a,b in zip(original,HOME)):
+        raise RuntimeError(f"Cube is not at HOME {HOME}: {original}")
     viewport = get_active_viewport()
 
     camera_path = str(viewport.camera_path)
     if not camera_path.endswith("/WorkcellCamera"):
         raise RuntimeError(f"Select WorkcellCamera (current: {camera_path})")
     OUTPUT_DIR.mkdir(parents=True,exist_ok=True)
+    if LABELS_PATH.exists():
+        raise RuntimeError(f"Delete old labels first: {LABELS_PATH}")
+    
 
 
     try:
-        for x in POSITIONS:
-            path = OUTPUT_DIR / f"pos-x{x:.2f}.png"
+        for x, y in POSITIONS:
+            path = OUTPUT_DIR / f"pos-x{x:.2f}-y{y:+.2f}.png"
             if path.exists():
                 raise RuntimeError(f"Already exists: {path}")
-            translate.Set(type(original)(x,original[1],original[2]))
-            await next_viewport_frame_async(viewport)
+            translate.Set(type(original)(x,y,original[2]))
+            for _ in range(30):
+                await next_viewport_frame_async(viewport)
             await capture(viewport,path)
+
             append_label(path.name, translate.Get())
             print(f"Captured {path.name} at {translate.Get()}")
 
