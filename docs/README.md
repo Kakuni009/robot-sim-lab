@@ -18,7 +18,7 @@
 6. [位置変更・撮影・CSV追記を自動化する](06-position-dataset-script.md)
    — `generate_position_dataset.py` の行ごとの解説、async/await、遭遇したエラーの読み方。
 7. [撮影結果を自動で検証する](07-verify-dataset.md)
-   — `verify_dataset.py` の構成、`main()` の意味、3D→画素の投影計算、背景の中央値による部品検出と残像検証。
+   — `verify_dataset.py` の構成、`main()` の意味、3D→画素の投影計算、背景の中央値による部品検出と残像検証（図解）、63点撮影でのにじみによる誤検出。
 
 今回Script Editorへ追加したのは、既存サンプルの状態を読む調査コード。
 ロボットの制御コードは変更していない。目印はPythonではなくGUIで追加した。

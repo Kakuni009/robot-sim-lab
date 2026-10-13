@@ -11,8 +11,8 @@ from omni.kit.viewport.utility import (
 )
 
 
-POSITIONS = [(x,y) for x in [0.35,0.45,0.55] for y in [-0.2, 0.0,0.2]]
-OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs/v02")
+POSITIONS = [(round(0.30+0.05 * i, 2),round(-0.4+0.1 * j, 1)) for i in range(7) for j in range(9)]
+OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs/v04")
 LABELS_PATH = OUTPUT_DIR / "labels.csv"
 HOME = (0.5,0.0,0.025800000876188278)
 
@@ -31,6 +31,8 @@ async def move_part_loop():
     if any(abs(a-b) >1e-6 for a,b in zip(original,HOME)):
         raise RuntimeError(f"Cube is not at HOME {HOME}: {original}")
     viewport = get_active_viewport()
+    omni.usd.get_context().get_selection().clear_selected_prim_paths()
+
 
     camera_path = str(viewport.camera_path)
     if not camera_path.endswith("/WorkcellCamera"):
@@ -47,7 +49,7 @@ async def move_part_loop():
             if path.exists():
                 raise RuntimeError(f"Already exists: {path}")
             translate.Set(type(original)(x,y,original[2]))
-            for _ in range(30):
+            for _ in range(60):
                 await next_viewport_frame_async(viewport)
             await capture(viewport,path)
 
