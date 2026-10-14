@@ -17,7 +17,7 @@ GHOST_THRESHOLD = 7
 
 HOME = (0.5, 0.0,0.025800000876188278)
 
-DATA_DIR = ROOT/ "outputs" / "v04"
+DATA_DIR = ROOT/ "outputs" / "v05"
 LABELS_PATH = DATA_DIR /"labels.csv"
 CAMERA_PATH = "/WorkcellCamera"
 WIDTH,HEIGHT = 1280, 720
