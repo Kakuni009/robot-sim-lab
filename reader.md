@@ -529,13 +529,44 @@ RTXのリアルタイム描画が複数フレームを混ぜて平滑化する�
 - 途中: 最初は `__main__` の変更が保存されておらず検証が63行表示され、等倍に描く2行も抜けていて `sheet.png` だけができた。2か所直して解消した。
 - 気づいたこと: 枠（中心±25pxの決め打ち）は上の面にはほぼ合うが、手前の側面がはみ出す。
   検出の正解の枠にするには、立方体の8つの角を投影して外側を囲む必要がある。
+- 質疑: 枠と数値を描いているのは `draw_mark` の `draw.rectangle`（赤い枠）と `draw.text`（黄色の数値）。
+  数値は画素位置ではなく、`labels.csv` の部品座標 (x, y)（メートル）。
+
+### バウンディングボックスの試作（Claude、本人は未入力）
+
+- 部品の大きさ: USD の `/World/PartCube` は `size 1.0`・`scale 0.0515`・回転なし（`orient (1,0,0,0)`）。**一辺 0.0515m**。
+- 方法: 中心 (x, y, z) から ±0.02575 ずらした8つの角を `project` で画素にし、u・v の最小と最大を枠（左・上・右・下）とする。
+- 確認: 画像で背景との差が150を超える範囲（部品の本体）と比べ、63枚とも各辺のずれは1.3px以内（平均0.5px以内）。
+  手前の側面も枠に入る。枠の幅は平均52.7px。
+- 試作は Claude の作業用コピーで動かした。本人の `overlay_labels.py` はまだ変えていない。
 
 ## 次回の開始点
 
-1. 立方体の8つの角を投影して、バウンディングボックス（左・上・右・下の画素位置）を求める。
-   `overlay_labels.py` で枠を描いて目視確認し、合っていれば `labels.csv` に列を足すか判断する（10/13の候補を具体化）。
-   立方体の大きさは USD の `/World/PartCube` から読む（中心の高さ 0.0258 から、一辺は約0.05mと推測。未確認）。
-2. その後: 部品の色・照明を変えて画像を作る（ステップ2の残り。ステップ3の「照明一定 vs 照明変化」の比較に必要）。
+1. `overlay_labels.py` を8つの角の枠に変えて実行する（入力するコードは下）。
+   `overlay/pos-x0.60-y-0.40.png` で、左下の部品の側面まで枠に入れば成功。
+   - 1行目の上に `from itertools import product`
+   - `MARK = 25` を `HALF = 0.0515 / 2` に置き換え
+   - `draw_mark` を次の2つの関数に置き換え
+     ```python
+     def project_box(world_to_cam, scale, x, y, z):
+         corners = [project(world_to_cam, scale, x + dx, y + dy, z + dz)
+                    for dx, dy, dz in product((-HALF, HALF), repeat=3)]
+         us = [u for u, v in corners]
+         vs = [v for u, v in corners]
+         return min(us), min(vs), max(us), max(vs)
+
+     def draw_mark(image, box, text=None):
+         left, top, right, bottom = box
+         draw = ImageDraw.Draw(image)
+         draw.rectangle(box, outline=(255, 0, 0), width=2)
+         if text:
+             draw.text((left, top - 14), text, fill=(255, 255, 0))
+     ```
+   - `main` の中: `u, v = project(...)` を `box = project_box(world_to_cam, scale, x, y, z)` に、
+     `draw_mark(image, box, f"({x:.2f}, {y:+.2f})")`、`draw_mark(thumb, [p * THUMB_SCALE for p in box])` に変える。
+2. 枠が合ったら、`labels.csv` に枠の列（left, top, right, bottom）を足すか判断する。
+   足すなら、撮影スクリプト側で書くか、`overlay_labels.py` のように後から別のCSVへ書き出すかも決める。
+3. その後: 部品の色・照明を変えて画像を作る（ステップ2の残り。ステップ3の「照明一定 vs 照明変化」の比較に必要）。
 
 保留: 残像の測り方の変更、3フレームでの撮り直し（上の「残像の調査は保留にした」）。
 
