@@ -19,6 +19,8 @@
    — `generate_position_dataset.py` の行ごとの解説、async/await、遭遇したエラーの読み方。
 7. [撮影結果を自動で検証する](07-verify-dataset.md)
    — `verify_dataset.py` の構成、`main()` の意味、3D→画素の投影計算、背景の中央値による部品検出と残像検証（図解）、63点撮影でのにじみによる誤検出、撮影順を変えた再撮影（v05）と輪郭状の残像。
+8. [ラベル位置を画像に重ねて目視確認する](08-overlay-labels.md)
+   — `overlay_labels.py` の構成、`if __name__ == "__main__":` の意味、縮小してから描く理由、63枚の確認結果。
 
 今回Script Editorへ追加したのは、既存サンプルの状態を読む調査コード。
 ロボットの制御コードは変更していない。目印はPythonではなくGUIで追加した。
