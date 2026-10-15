@@ -540,33 +540,20 @@ RTXのリアルタイム描画が複数フレームを混ぜて平滑化する�
   手前の側面も枠に入る。枠の幅は平均52.7px。
 - 試作は Claude の作業用コピーで動かした。本人の `overlay_labels.py` はまだ変えていない。
 
+## 進捗記録（2026-10-15）
+
+### 枠を8つの角の投影に変えた（`overlay_labels.py`）
+
+- 本人が入力: `project_box`（8つの角を `project` で画素にし、u・v の最小と最大を返す）を足し、
+  `draw_mark` は枠 `(left, top, right, bottom)` を受け取る形に変えた。`MARK = 25` は `HALF = 0.0515 / 2` に置き換え。
+- 結果: `overlay/pos-x0.60-y-0.40.png` で、左下の部品の上の面と右の側面がどちらも枠に収まった（目視）。
+  `sheet.png` でも63枚すべてに枠が描かれている（縮小表示での目視）。
+
 ## 次回の開始点
 
-1. `overlay_labels.py` を8つの角の枠に変えて実行する（入力するコードは下）。
-   `overlay/pos-x0.60-y-0.40.png` で、左下の部品の側面まで枠に入れば成功。
-   - 1行目の上に `from itertools import product`
-   - `MARK = 25` を `HALF = 0.0515 / 2` に置き換え
-   - `draw_mark` を次の2つの関数に置き換え
-     ```python
-     def project_box(world_to_cam, scale, x, y, z):
-         corners = [project(world_to_cam, scale, x + dx, y + dy, z + dz)
-                    for dx, dy, dz in product((-HALF, HALF), repeat=3)]
-         us = [u for u, v in corners]
-         vs = [v for u, v in corners]
-         return min(us), min(vs), max(us), max(vs)
-
-     def draw_mark(image, box, text=None):
-         left, top, right, bottom = box
-         draw = ImageDraw.Draw(image)
-         draw.rectangle(box, outline=(255, 0, 0), width=2)
-         if text:
-             draw.text((left, top - 14), text, fill=(255, 255, 0))
-     ```
-   - `main` の中: `u, v = project(...)` を `box = project_box(world_to_cam, scale, x, y, z)` に、
-     `draw_mark(image, box, f"({x:.2f}, {y:+.2f})")`、`draw_mark(thumb, [p * THUMB_SCALE for p in box])` に変える。
-2. 枠が合ったら、`labels.csv` に枠の列（left, top, right, bottom）を足すか判断する。
+1. `labels.csv` に枠の列（left, top, right, bottom）を足すか判断する。
    足すなら、撮影スクリプト側で書くか、`overlay_labels.py` のように後から別のCSVへ書き出すかも決める。
-3. その後: 部品の色・照明を変えて画像を作る（ステップ2の残り。ステップ3の「照明一定 vs 照明変化」の比較に必要）。
+2. その後: 部品の色・照明を変えて画像を作る（ステップ2の残り。ステップ3の「照明一定 vs 照明変化」の比較に必要）。
 
 保留: 残像の測り方の変更、3フレームでの撮り直し（上の「残像の調査は保留にした」）。
 
