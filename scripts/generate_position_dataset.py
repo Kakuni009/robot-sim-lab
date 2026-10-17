@@ -12,7 +12,7 @@ from omni.kit.viewport.utility import (
 
 YS = [-0.4, -0.2, 0.0, 0.2, 0.4, -0.3, -0.1, 0.1, 0.3]
 POSITIONS = [(round(0.30+0.05 * i, 2),y) for i in range(7) for y in YS]
-OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs/v05")
+OUTPUT_DIR = Path("C:/cloud/robot-sim-lab/outputs/v05")
 LABELS_PATH = OUTPUT_DIR / "labels.csv"
 HOME = (0.5,0.0,0.025800000876188278)
 

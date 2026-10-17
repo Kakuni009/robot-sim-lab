@@ -10,7 +10,7 @@ from omni.kit.viewport.utility import (
 )
 
 
-OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs")
+OUTPUT_DIR = Path("C:/cloud/robot-sim-lab/outputs")
 
 
 def next_output_path() -> Path:

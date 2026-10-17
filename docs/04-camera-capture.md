@@ -16,7 +16,7 @@
 Script Editorで実行した入口は次の1行。
 
 ```python
-exec(open(r"C:\cloud\claude_hub\robot-sim-lab\scripts\capture_workcell.py", encoding="utf-8").read())
+exec(open(r"C:\cloud\robot-sim-lab\scripts\capture_workcell.py", encoding="utf-8").read())
 ```
 
 ## スクリプトの仕組み

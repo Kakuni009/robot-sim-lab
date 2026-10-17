@@ -67,7 +67,7 @@ from omni.kit.viewport.utility import (
 
 ```python
 POSITIONS = [0.45, 0.60]
-OUTPUT_DIR = Path("C:/cloud/claude_hub/robot-sim-lab/outputs/v02")
+OUTPUT_DIR = Path("C:/cloud/robot-sim-lab/outputs/v02")
 LABELS_PATH = OUTPUT_DIR / "labels.csv"
 ```
 

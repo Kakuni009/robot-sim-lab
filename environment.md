@@ -16,7 +16,7 @@ Isaac Labは動作学習へ進む段階で追加する。
 PowerShellで実行する。uvがPATH上に必要。
 
 ```powershell
-cd C:\cloud\claude_hub\robot-sim-lab
+cd C:\cloud\robot-sim-lab
 .\setup.ps1
 ```
 
@@ -26,7 +26,7 @@ PyTorchは公式CUDA 12.8インデックス、Isaac SimはPyPIとNVIDIA公式イ
 ## 起動
 
 ```powershell
-cd C:\cloud\claude_hub\robot-sim-lab
+cd C:\cloud\robot-sim-lab
 .\launch.ps1
 ```
 
